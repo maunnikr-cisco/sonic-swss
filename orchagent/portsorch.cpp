@@ -258,6 +258,90 @@ const vector<sai_port_stat_t> port_stat_ids =
     SAI_PORT_STAT_IF_IN_FEC_CORRECTED_BITS
 };
 
+const vector<sai_port_stat_t> cisco_port_stat_ids =
+{
+    SAI_PORT_STAT_IF_IN_OCTETS,
+    SAI_PORT_STAT_IF_IN_UCAST_PKTS,
+    SAI_PORT_STAT_IF_IN_NON_UCAST_PKTS,
+    SAI_PORT_STAT_IF_IN_DISCARDS,
+    SAI_PORT_STAT_IF_IN_ERRORS,
+    SAI_PORT_STAT_IF_IN_UNKNOWN_PROTOS,
+    SAI_PORT_STAT_IF_OUT_OCTETS,
+    SAI_PORT_STAT_IF_OUT_UCAST_PKTS,
+    SAI_PORT_STAT_IF_OUT_NON_UCAST_PKTS,
+    SAI_PORT_STAT_IF_OUT_DISCARDS,
+    SAI_PORT_STAT_IF_OUT_ERRORS,
+    SAI_PORT_STAT_IF_OUT_QLEN,
+    SAI_PORT_STAT_IF_IN_MULTICAST_PKTS,
+    SAI_PORT_STAT_IF_IN_BROADCAST_PKTS,
+    SAI_PORT_STAT_IF_OUT_MULTICAST_PKTS,
+    SAI_PORT_STAT_IF_OUT_BROADCAST_PKTS,
+    SAI_PORT_STAT_ETHER_RX_OVERSIZE_PKTS,
+    SAI_PORT_STAT_ETHER_TX_OVERSIZE_PKTS,
+    SAI_PORT_STAT_ETHER_IN_PKTS_64_OCTETS,
+    SAI_PORT_STAT_ETHER_IN_PKTS_65_TO_127_OCTETS,
+    SAI_PORT_STAT_ETHER_IN_PKTS_128_TO_255_OCTETS,
+    SAI_PORT_STAT_ETHER_IN_PKTS_256_TO_511_OCTETS,
+    SAI_PORT_STAT_ETHER_IN_PKTS_512_TO_1023_OCTETS,
+    SAI_PORT_STAT_ETHER_IN_PKTS_1024_TO_1518_OCTETS,
+    SAI_PORT_STAT_ETHER_IN_PKTS_1519_TO_2500_OCTETS,
+    SAI_PORT_STAT_ETHER_IN_PKTS_2501_TO_9000_OCTETS,
+    SAI_PORT_STAT_ETHER_IN_PKTS_9001_TO_16383_OCTETS,
+    SAI_PORT_STAT_ETHER_OUT_PKTS_64_OCTETS,
+    SAI_PORT_STAT_ETHER_OUT_PKTS_65_TO_127_OCTETS,
+    SAI_PORT_STAT_ETHER_OUT_PKTS_128_TO_255_OCTETS,
+    SAI_PORT_STAT_ETHER_OUT_PKTS_256_TO_511_OCTETS,
+    SAI_PORT_STAT_ETHER_OUT_PKTS_512_TO_1023_OCTETS,
+    SAI_PORT_STAT_ETHER_OUT_PKTS_1024_TO_1518_OCTETS,
+    SAI_PORT_STAT_ETHER_OUT_PKTS_1519_TO_2500_OCTETS,
+    SAI_PORT_STAT_ETHER_OUT_PKTS_2501_TO_9000_OCTETS,
+    SAI_PORT_STAT_ETHER_OUT_PKTS_9001_TO_16383_OCTETS,
+    SAI_PORT_STAT_PFC_0_TX_PKTS,
+    SAI_PORT_STAT_PFC_1_TX_PKTS,
+    SAI_PORT_STAT_PFC_2_TX_PKTS,
+    SAI_PORT_STAT_PFC_3_TX_PKTS,
+    SAI_PORT_STAT_PFC_4_TX_PKTS,
+    SAI_PORT_STAT_PFC_5_TX_PKTS,
+    SAI_PORT_STAT_PFC_6_TX_PKTS,
+    SAI_PORT_STAT_PFC_7_TX_PKTS,
+    SAI_PORT_STAT_PFC_0_RX_PKTS,
+    SAI_PORT_STAT_PFC_1_RX_PKTS,
+    SAI_PORT_STAT_PFC_2_RX_PKTS,
+    SAI_PORT_STAT_PFC_3_RX_PKTS,
+    SAI_PORT_STAT_PFC_4_RX_PKTS,
+    SAI_PORT_STAT_PFC_5_RX_PKTS,
+    SAI_PORT_STAT_PFC_6_RX_PKTS,
+    SAI_PORT_STAT_PFC_7_RX_PKTS,
+    SAI_PORT_STAT_PAUSE_RX_PKTS,
+    SAI_PORT_STAT_PAUSE_TX_PKTS,
+    SAI_PORT_STAT_ETHER_STATS_TX_NO_ERRORS,
+    SAI_PORT_STAT_IP_IN_UCAST_PKTS,
+    SAI_PORT_STAT_ETHER_STATS_JABBERS,
+    SAI_PORT_STAT_ETHER_STATS_FRAGMENTS,
+    SAI_PORT_STAT_ETHER_STATS_UNDERSIZE_PKTS,
+    SAI_PORT_STAT_IP_IN_RECEIVES,
+    SAI_PORT_STAT_IF_IN_FEC_CORRECTABLE_FRAMES,
+    SAI_PORT_STAT_IF_IN_FEC_NOT_CORRECTABLE_FRAMES,
+    SAI_PORT_STAT_IF_IN_FEC_SYMBOL_ERRORS,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S0,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S1,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S2,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S3,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S4,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S5,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S6,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S7,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S8,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S9,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S10,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S11,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S12,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S13,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S14,
+    SAI_PORT_STAT_IF_IN_FEC_CODEWORD_ERRORS_S15,
+    SAI_PORT_STAT_IF_IN_FEC_CORRECTED_BITS
+};
+
 const vector<sai_port_stat_t> gbport_stat_ids =
 {
     SAI_PORT_STAT_IF_IN_OCTETS,
@@ -3767,7 +3851,37 @@ bool PortsOrch::initPort(const PortConfig &port)
                 If they are enabled, install the counters immediately */
                 if (flex_counters_orch->getPortCountersState())
                 {
-                    auto port_counter_stats = generateCounterStats(port_stat_ids, sai_serialize_port_stat);
+                    auto stat_ids = port_stat_ids;
+                    char *platform = getenv("PLATFORM");
+                    if(platform && strstr(platform, CISCO_PLATFORM_SUBSTRING))
+                        if (gSwitchOrch->querySwitchCapability(SAI_OBJECT_TYPE_PORT, SAI_PORT_ATTR_PORT_STAT_EXTENDED))
+                        {
+                            // Query the supported counters
+                            sai_attribute_t attr;
+                            attr.id = SAI_PORT_ATTR_PORT_STAT_EXTENDED;
+
+                            vector<sai_port_stat_t> supported_counters(75); // Preallocate space
+                            attr.value.s32list.count = static_cast<uint32_t>(supported_counters.size());
+                            attr.value.s32list.list = reinterpret_cast<sai_int32_t*>(supported_counters.data());
+
+                            sai_status_t status = sai_port_api->get_port_attribute(port_id, 1, &attr);
+                            if (status == SAI_STATUS_SUCCESS)  
+                            {
+                                // Resize and copy the data
+                                supported_counters.resize(attr.value.s32list.count);
+                                stat_ids = supported_counters;
+                            }
+                        }
+                        else
+                        {
+                            // Use the default set of counters for Cisco platforms
+                            stat_ids = cisco_port_stat_ids;
+                        }
+                    }
+                    else{
+                        stat_ids = port_stat_ids;
+                    }
+                    auto port_counter_stats = generateCounterStats(stat_ids, sai_serialize_port_stat);
                     port_stat_manager.setCounterIdList(p.m_port_id,
                             CounterType::PORT, port_counter_stats);
                     auto gbport_counter_stats = generateCounterStats(gbport_stat_ids, sai_serialize_port_stat);
