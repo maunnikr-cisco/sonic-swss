@@ -50,6 +50,7 @@ extern sai_fdb_api_t *sai_fdb_api;
 extern sai_tam_api_t *sai_tam_api;
 extern sai_l2mc_group_api_t *sai_l2mc_group_api;
 extern sai_buffer_api_t *sai_buffer_api;
+extern sai_counter_api_t*   sai_counter_api;
 extern IntfsOrch *gIntfsOrch;
 extern NeighOrch *gNeighOrch;
 extern CrmOrch *gCrmOrch;
@@ -3725,97 +3726,141 @@ bool PortsOrch::initPort(const PortConfig &port)
     const auto &role = port.role.value;
     const auto &index = port.index.value;
     const auto &lane_set = port.lanes.value;
+    SWSS_LOG_ERROR("DEBUG: Initializing port with alias: %s, index: %d, lane_set: %s", alias.c_str(), index, swss::join(",", lane_set.begin(), lane_set.end()).c_str());
 
+    SWSS_LOG_ERROR("DEBUG: m_portListLaneMap size: %zu", m_portListLaneMap.size());
+    SWSS_LOG_ERROR("DEBUG: m_portList size: %zu", m_portList.size());
+    SWSS_LOG_ERROR("DEBUG: m_portListLaneMap contents:");
+    for (const auto &pair : m_portListLaneMap)
+    {
+        std::string lane_set_str = swss::join(",", pair.first.begin(), pair.first.end());
+        SWSS_LOG_ERROR("DEBUG: Lane set: %s, Port ID: 0x%" PRIx64, lane_set_str.c_str(), pair.second);
+    }
     /* Determine if the lane combination exists in switch */
     if (m_portListLaneMap.find(lane_set) != m_portListLaneMap.end())
     {
         sai_object_id_t id = m_portListLaneMap[lane_set];
-
+        // Fixed: Convert lane_set to string for logging
+        std::string lane_set_str = swss::join(",", lane_set.begin(), lane_set.end());
+        SWSS_LOG_ERROR("DEBUG: Found existing port with lane_set: %s, port_id: 0x%" PRIx64, lane_set_str.c_str(), id);
+        
         /* Determine if the port has already been initialized before */
         if (m_portList.find(alias) != m_portList.end() && m_portList[alias].m_port_id == id)
         {
-            SWSS_LOG_DEBUG("Port has already been initialized before alias:%s", alias.c_str());
+            SWSS_LOG_ERROR("Port has already been initialized before alias:%s", alias.c_str());
         }
         else
         {
             Port p(alias, Port::PHY);
-
+            SWSS_LOG_ERROR("DEBUG: Reusing existing port with alias: %s, port_id: 0x%" PRIx64, alias.c_str(), id);
             p.m_index = index;
             p.m_port_id = id;
 
             /* Initialize the port and create corresponding host interface */
             if (initializePort(p))
             {
+                SWSS_LOG_ERROR("DEBUG: Successfully initialized port with alias: %s, port_id: 0x%" PRIx64, alias.c_str(), id);
                 /* Create associated Gearbox lane mapping */
                 initGearboxPort(p);
-
+                SWSS_LOG_ERROR("DEBUG: Successfully initialized Gearbox port with alias: %s, port_id: 0x%" PRIx64, alias.c_str(), id);
                 /* Add port to port list */
                 m_portList[alias] = p;
                 saiOidToAlias[id] = alias;
                 m_port_ref_count[alias] = 0;
                 m_portOidToIndex[id] = index;
-
+                SWSS_LOG_ERROR("DEBUG: Added port with alias: %s, port_id: 0x%" PRIx64 " to port list", alias.c_str(), id);
                 /* Add port name map to counter table */
                 FieldValueTuple tuple(p.m_alias, sai_serialize_object_id(p.m_port_id));
+                SWSS_LOG_ERROR("DEBUG: Adding port name map to counter table with alias: %s, port_id: 0x%" PRIx64, p.m_alias.c_str(), p.m_port_id);
                 vector<FieldValueTuple> fields;
                 fields.push_back(tuple);
+                SWSS_LOG_ERROR("DEBUG: Setting counter table with alias: %s, port_id: 0x%" PRIx64, p.m_alias.c_str(), p.m_port_id);
                 m_counterTable->set("", fields);
-
+                SWSS_LOG_ERROR("DEBUG: Successfully initialized port with alias: %s, port_id: 0x%" PRIx64, alias.c_str(), id);
                 // Install a flex counter for this port to track stats
-                auto flex_counters_orch = gDirectory.get<FlexCounterOrch*>();
+                //auto flex_counters_orch = gDirectory.get<FlexCounterOrch*>();
                 /* Delay installing the counters if they are yet enabled
                 If they are enabled, install the counters immediately */
-                SWSS_LOG_DEBUG("Right before installing port counters for port %s", alias.c_str());
+                auto flex_counters_orch = gDirectory.get<FlexCounterOrch*>();
+                SWSS_LOG_ERROR("DEBUG: Installing port counters for alias: %s, port_id: 0x%" PRIx64, alias.c_str(), p.m_port_id);
                 if (flex_counters_orch->getPortCountersState())
                 {
+                    SWSS_LOG_ERROR("DEBUG: Initializing port %s with port_id 0x%" PRIx64, alias.c_str(), p.m_port_id);
                     vector<sai_port_stat_t> stat_ids;
                     bool query_success = false;
-                    // If gearbox is enabled, use gearbox port stats
-                    SWSS_LOG_DEBUG("Checking `SAI_PORT_ATTR_PORT_STAT_EXTENDED` support for port 0x%" PRIx64, p.m_port_id);
-                    //if (gSwitchOrch->querySwitchCapability(SAI_OBJECT_TYPE_PORT, SAI_PORT_ATTR_PORT_STAT_EXTENDED))
-                    //{
+                    
                     try {
-                        // Query the supported counters
                         sai_attribute_t attr;
                         attr.id = SAI_PORT_ATTR_PORT_STAT_EXTENDED;
+                        SWSS_LOG_ERROR("DEBUG: Initializing port %s with port_id 0x%" PRIx64, alias.c_str(), p.m_port_id);
 
-                        vector<sai_port_stat_t> supported_counters(75); // Preallocate space
-                        attr.value.s32list.count = static_cast<uint32_t>(supported_counters.size());
-                        attr.value.s32list.list = reinterpret_cast<sai_int32_t*>(supported_counters.data());
-                        SWSS_LOG_DEBUG("supported_counters.size() = %zu", supported_counters.size());
+                        // PHASE 1: Query buffer size (count = 0)
+                        attr.value.objlist.count = 0;
+                        attr.value.objlist.list = nullptr;
+                        
+                        SWSS_LOG_ERROR("DEBUG: Phase 1 - querying buffer size for port 0x%" PRIx64, p.m_port_id);
+                        SWSS_LOG_ERROR("DEBUG: SAI API call: sai_port_api->get_port_attribute(0x%" PRIx64 ", 1, &attr)", p.m_port_id);
                         sai_status_t status = sai_port_api->get_port_attribute(p.m_port_id, 1, &attr);
-                        if (status == SAI_STATUS_SUCCESS)  
-                        {
-                            // Resize and copy the data
-                            supported_counters.resize(attr.value.s32list.count);
-                            stat_ids = supported_counters;
-                            query_success = true;
-                            SWSS_LOG_DEBUG("Queried %zu extended port stats for port 0x%" PRIx64, stat_ids.size(), p.m_port_id);
-                            SWSS_LOG_DEBUG("supported_counters.size() = %zu", supported_counters.size());
-                        }
-                        else{
-                            SWSS_LOG_ERROR("Failed to query extended port stats. Will select default range of counters, status: %d", status);
-                            task_process_status handle_status = handleSaiGetStatus(SAI_API_PORT, status);
-                            if (handle_status != task_success)
-                            {
-                                return {};
+                        SWSS_LOG_ERROR("DEBUG: SAI API returned status %d", status);
+                        SWSS_LOG_ERROR("DEBUG: SAI API returned buffer size %u", attr.value.objlist.count);
+                        if (status == SAI_STATUS_BUFFER_OVERFLOW || status == SAI_STATUS_SUCCESS) {
+                            uint32_t counter_count = attr.value.objlist.count;
+                            SWSS_LOG_ERROR("DEBUG: SAI says it has %u counters", counter_count);
+                            
+                            if (counter_count > 0) {
+                                // PHASE 2: Query actual counter objects
+                                vector<sai_object_id_t> counter_objects(counter_count);
+                                attr.value.objlist.count = counter_count;
+                                attr.value.objlist.list = counter_objects.data();
+                                
+                                SWSS_LOG_ERROR("DEBUG: Phase 2 - querying %u counter objects", counter_count);
+                                status = sai_port_api->get_port_attribute(p.m_port_id, 1, &attr);
+                                SWSS_LOG_ERROR("DEBUG: SAI API returned status %d", status);
+                                if (status == SAI_STATUS_SUCCESS) {
+                                    SWSS_LOG_ERROR("DEBUG: Got %u counter objects from SAI", attr.value.objlist.count);
+                                    
+                                    // Convert counter objects to stat IDs
+                                    for (uint32_t i = 0; i < attr.value.objlist.count; i++) {
+                                        SWSS_LOG_ERROR("DEBUG: Processing counter object 0x%lx", counter_objects[i]);
+                                        
+                                        sai_attribute_t counter_attr;
+                                        counter_attr.id = SAI_COUNTER_ATTR_STAT_ID_LIST;
+                                        
+                                        vector<sai_int32_t> stat_list(1);
+                                        counter_attr.value.s32list.count = 1;
+                                        counter_attr.value.s32list.list = stat_list.data();
+                                        
+                                        sai_status_t counter_status = sai_counter_api->get_counter_attribute(counter_objects[i], 1, &counter_attr);
+                                        if (counter_status == SAI_STATUS_SUCCESS) {
+                                            stat_ids.push_back(static_cast<sai_port_stat_t>(stat_list[0]));
+                                            SWSS_LOG_ERROR("DEBUG: Counter 0x%lx maps to stat %d", counter_objects[i], stat_list[0]);
+                                        } else {
+                                            SWSS_LOG_ERROR("DEBUG: Failed to query counter 0x%lx attributes: %d", counter_objects[i], counter_status);
+                                        }
+                                    }
+                                    
+                                    if (!stat_ids.empty()) {
+                                        query_success = true;
+                                        SWSS_LOG_NOTICE("Successfully discovered %zu extended port stats for port 0x%" PRIx64, stat_ids.size(), p.m_port_id);
+                                    }
+                                }
+                            } else {
+                                SWSS_LOG_ERROR("DEBUG: Phase 1 failed with status %d", status);
                             }
                         }
                     } catch (const std::exception &e) {
                         SWSS_LOG_ERROR("Exception while querying extended port stats: %s", e.what());
-                        // Fallback to default port stats if query fails
-                        if(!query_success)
-                        {
-                            SWSS_LOG_DEBUG("Using default port stats"
-                                            " since extended port stats query failed");
-
-                            // Use default port stats if custom range of port stats are not supported or query failed
-                            stat_ids = port_stat_ids;
-                        }
                     }
-                    SWSS_LOG_DEBUG("stat_ids are %zu in size", stat_ids.size());
+                
+                    // Fallback to default if query failed
+                    if (!query_success) {
+                        SWSS_LOG_INFO("Using default port stats for port %s", alias.c_str());
+                        stat_ids = port_stat_ids;
+                    } else {
+                        SWSS_LOG_NOTICE("Using %zu extended port stats for port %s", stat_ids.size(), alias.c_str());
+                    }
                     auto port_counter_stats = generateCounterStats(stat_ids, sai_serialize_port_stat);
-                    SWSS_LOG_DEBUG("port_counter_stats contains %zu counters", port_counter_stats.size());
+                    SWSS_LOG_ERROR("DEBUG: Generated port counter stats for port %s", alias.c_str());
                     port_stat_manager.setCounterIdList(p.m_port_id,
                             CounterType::PORT, port_counter_stats);
                     auto gbport_counter_stats = generateCounterStats(gbport_stat_ids, sai_serialize_port_stat);
@@ -3832,7 +3877,7 @@ bool PortsOrch::initPort(const PortConfig &port)
                     port_buffer_drop_stat_manager.setCounterIdList(p.m_port_id, CounterType::PORT, port_buffer_drop_stats);
                 }
 
-		if (flex_counters_orch->getWredPortCountersState())
+		        if (flex_counters_orch->getWredPortCountersState())
                 {
                     auto wred_port_stats = generateCounterStats(wred_port_stat_ids, sai_serialize_port_stat);
                     wred_port_stat_manager.setCounterIdList(p.m_port_id, CounterType::PORT, wred_port_stats);
@@ -5394,7 +5439,7 @@ void PortsOrch::doVlanMemberTask(Consumer &consumer)
 
         if (!getPort(port_alias, port))
         {
-            SWSS_LOG_DEBUG("%s is not not yet created, delaying", port_alias.c_str());
+            SWSS_LOG_ERROR("%s is not not yet created, delaying", port_alias.c_str());
             it++;
             continue;
         }
